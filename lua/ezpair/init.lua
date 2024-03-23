@@ -5,7 +5,7 @@ M._bufnr = nil
 M._openPane = function(selected_text)
     -- make a buffer if i need it
     if M._bufnr then
-        return
+
     else
         M._bufnr = vim.api.nvim_create_buf(true, true)
     end
@@ -54,9 +54,8 @@ M._getFunctionAtPoint = function()
     print("No function found at the current cursor position.")
 end
 
-M.todo = function() 
+M.CritFunc = function() 
     M._openPane(M._getFunctionAtPoint())
 end
-
 
 return M
