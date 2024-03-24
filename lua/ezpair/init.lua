@@ -6,6 +6,22 @@ local criticalSrSoftwareDev = "You are a Senior software developer. Review the f
 
 local helpfulSrSoftwareDev = "You are a Senior software developer. Review my question an provide suggestions and solutions. Do not discuss 'being a developer', only talk about code and solutions for this issue. Do not provide cavets or soften your responses. Your partner already knows this feedback isn't personal. Provide actionable code samples when appropriate. Your feedback will be in a console window, format it acordingly."
 
+local getApiKey = function()
+    local homeDir = os.getenv("HOME")
+    local filePath = homeDir .. "/.ezpair"
+    
+    local file = io.open(filePath, "r")
+    if not file then
+        return nil, "Error: File does not exist."
+    else
+        local content = file:read("*all")
+        file:close()
+        trimmed = content:gsub("%s+$", "")
+        return trimmed
+    end
+end
+
+
 local getSelected = function()
 
     local prev_mark = vim.api.nvim_buf_get_mark(0, "<")
@@ -31,6 +47,12 @@ local runGpt = function(content, system)
     local escapedContent = table.concat(content, "\\n")
 
     local curl = require "plenary.curl"
+
+    --local api_key = "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"
+    local api_key = getApiKey()
+    local token = "Bearer " .. api_key
+
+    P(token)
 
     local b = {
         model = "gpt-4-turbo-preview",
@@ -58,7 +80,7 @@ local runGpt = function(content, system)
         timeout = 60000,
         headers = {
             content_type = "application/json",
-            authorization = "Bearer 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"
+            authorization = token
         },
         body = json
     })
