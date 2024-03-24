@@ -1,0 +1,43 @@
+local M = {}
+
+M._b = nil -- buffer
+
+local getSelected = function()
+    local prev_mark = vim.api.nvim_buf_get_mark(0, "<")
+    local next_mark = vim.api.nvim_buf_get_mark(0, ">")
+
+    local lines = vim.api.nvim_buf_get_lines(0, prev_mark[1], next_mark[1], false)
+
+    return lines
+end
+
+local makeBuff = function()
+
+    if M._buf == nil then
+        M._b = vim.api.nvim_create_buf(true, true)
+        print("made a new buffer")
+    end
+
+    print("make buffer func")
+
+end
+
+M.CritFunc = function() 
+
+    local selected = getSelected()
+
+    print(selected)
+
+    makeBuff()
+
+    --vim.api.nvim_buf_set_option(M._b, 'filetype', "plain")
+    --vim.cmd('vsplit')
+    --vim.api.nvim_command('wincmd l')
+    --vim.api.nvim_win_set_buf(0, M._b)
+
+end
+
+
+M.CritFunc()
+
+return M
