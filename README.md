@@ -6,8 +6,8 @@ A simple OpenApi Gpt-4 wrapper to ask questions from within nvim about functions
 
 ## Dependencies
 
-- (Treesitter)[https://github.com/nvim-treesitter/nvim-treesitter]
-- (Plenary)[https://github.com/nvim-lua/plenary.nvim]
+- [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+- [Plenary](https://github.com/nvim-lua/plenary.nvim)
 
 ## Example key binds
 ```
