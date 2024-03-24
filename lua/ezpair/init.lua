@@ -48,7 +48,6 @@ local runGpt = function(content, system)
 
     local curl = require "plenary.curl"
 
-    --local api_key = "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"
     local api_key = getApiKey()
     local token = "Bearer " .. api_key
 
