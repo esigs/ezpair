@@ -2,6 +2,10 @@ local M = {}
 
 M._b = nil -- buffer
 
+local criticalSrSoftwareDev = "You are a Senior software developer. Review the function passed to you and provide critical feedback. Do not discuss 'being a developer', only talk about the code. Do not provide cavets or soften your responses. Your partner already knows this feedback isn't personal. Provide actionable code samples when appropriate. Your feedback will be in a console window, format it acordingly."
+
+local helpfulSrSoftwareDev = "You are a Senior software developer. Review my question an provide suggestions and solutions. Do not discuss 'being a developer', only talk about code and solutions for this issue. Do not provide cavets or soften your responses. Your partner already knows this feedback isn't personal. Provide actionable code samples when appropriate. Your feedback will be in a console window, format it acordingly."
+
 local getSelected = function()
 
     local prev_mark = vim.api.nvim_buf_get_mark(0, "<")
@@ -22,11 +26,9 @@ local buffIsOpen = function()
     return false
 end
 
-local runGpt = function(content)
+local runGpt = function(content, system)
 
     local escapedContent = table.concat(content, "\\n")
-    P(escapedContent)
-
 
     local curl = require "plenary.curl"
 
@@ -35,7 +37,7 @@ local runGpt = function(content)
         messages = {
             {
                 role = "system",
-                content = "You are a Senior software developer. Review the function passed to you and provide critical feedback. Do not discuss 'being a developer', only talk about the code. Do not provide cavets or soften your responses. Your partner already knows this feedback isn't personal. Provide actionable code samples when appropriate. Your feedback will be in a console window, format it acordingly."
+                content = system
             },
             {
                 role = "user",
@@ -61,19 +63,9 @@ local runGpt = function(content)
         body = json
     })
 
-    P(res)
-
     local body = vim.fn.json_decode(res.body)
-    --P(body)
-    --P(body.error)
 
     local message = {}
-
-    -- P("res.status")
-    -- P(res.status == 200)
-    -- P(res.status)
-    -- P("body.choices")
-    -- P(body.choices)
 
     if res.status == 200 then
         message = body.choices[1].message.content
@@ -84,14 +76,26 @@ local runGpt = function(content)
 
     local newLines = {}
 
-    table.insert(newLines, "New Response: " .. os.date("%Y-%m-%d %H:%M:%S"))
-    table.insert(newLines, "Here's my feedback on your function:" )
-    table.insert(newLines, " ")
-
     for line in message:gmatch("[^\n]+") do
         table.insert(newLines, line)
     end
    
+    return newLines
+end
+
+local addBanner = function(messages, type, banner)
+    P(messages) 
+
+    local newLines = {}
+
+    table.insert(newLines, "New " .. type .. ": " .. os.date("%Y-%m-%d %H:%M:%S"))
+    table.insert(newLines, banner)
+    table.insert(newLines, " ")
+
+    for _, line in ipairs(messages) do
+        table.insert(newLines, line)
+    end
+
     return newLines
 end
 
@@ -136,20 +140,14 @@ local getFunctionAtPoint = function()
     return {"error", "No function found at the current cursor position."}
 end
 
-local append = function(selected)
+local append = function(selected, banner)
 
     local newLines = {}
     
     if selected[1] == "error" then
         table.insert(newLines, "Error: " .. os.date("%Y-%m-%d %H:%M:%S"))
         table.insert(newLines, " ")
-    else
-        table.insert(newLines, "New Request: " .. os.date("%Y-%m-%d %H:%M:%S"))
-        table.insert(newLines, "Getting critical feed back for:" )
-        table.insert(newLines, " ")
     end
-
-
 
     for _, line in ipairs(selected) do
         table.insert(newLines, line)
@@ -160,25 +158,42 @@ local append = function(selected)
 
 end
 
-
 local critFunc = function() 
 
     local selected = getFunctionAtPoint()
 
     makeBuff()
-    append(selected)
+    local selectedWithBanner = addBanner(selected, "Request", "Getting critical feed back for:")
+    append(selectedWithBanner)
     openBuff()
 
-    local critisim = runGpt(selected)
-    append(critisim)
+    local a = runGpt(selected, criticalSrSoftwareDev)
+
+    local withBanner = addBanner(a, "Response", "Here's my feedback on your function:")
+    append(withBanner)
 
 end
 
-
 M.CritFunc = function()
-
     critFunc()
+end
 
+M.Ask = function()
+
+    local input = vim.fn.input("Ask a question: ")
+    makeBuff()
+    openBuff()
+
+    if input == nil or input == '' then
+        append({"error", "You didn't seem to ask a question..."})
+    else
+        local inputWithBanner = addBanner({input}, "Request", "Asking...:")
+        append(inputWithBanner)
+
+        local gptResponse = runGpt({input}, helpfulSrSoftwareDev)
+        local withBanner = addBanner(gptResponse, "Response", "Here's what I think:")
+        append(withBanner)
+    end
 end
 
 return M
